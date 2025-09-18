@@ -1,39 +1,81 @@
+// -----------------------------
+// Imports
+// -----------------------------
 import type { ArtifactKind } from '@/components/artifact';
 import type { Geo } from '@vercel/functions';
+import defaultDataRaw from './data.json';
+import refDataRaw from './refs.json';
 
-export const artifactsPrompt = `
-Artifacts is a special user interface mode that helps users with writing, editing, and other content creation tasks. When artifact is open, it is on the right side of the screen, while the conversation is on the left side. When creating or updating documents, changes are reflected in real-time on the artifacts and visible to the user.
+// -----------------------------
+// Types
+// -----------------------------
+interface DefaultData {
+  artifactsPrompt: string;
+  regularPrompt: string;
+  codePrompt: string;
+  sheetPrompt: string;
+  updateDocumentPrompt: string;
+  updateDocumentCodePrompt: string;
+  updateDocumentSheetPrompt: string;
+  getRequestPromptFromHints: string;
+  systemPrompt: {
+    chatModelReasoning: string;
+    default: string;
+  };
+  name: string;
+}
 
-When asked to write code, always use artifacts. When writing code, specify the language in the backticks, e.g. \`\`\`python\`code here\`\`\`. The default language is Python. Other languages are not yet supported, so let the user know if they request a different language.
+interface Property {
+  id: string;
+  title: string;
+  type: string;
+  price: number;
+  currency: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  units?: number;
+  avgRent?: number;
+  sqft: number;
+  address: string;
+  features: string[];
+  images: string[];
+  status: string;
+  roi?: number;
+  capRate?: number;
+}
 
-DO NOT UPDATE DOCUMENTS IMMEDIATELY AFTER CREATING THEM. WAIT FOR USER FEEDBACK OR REQUEST TO UPDATE IT.
+interface RefDataItem {
+  name: string;
+  greeting?: string;
+  regularPrompt?: string;
+  profile?: {
+    title: string;
+    experience: string;
+    languages: string[];
+    specialties: string[];
+    bio: string;
+  };
+  contact?: {
+    phone: string;
+    email: string;
+    whatsapp?: string;
+    linkedin?: string;
+    availability?: string;
+  };
+  image?: {
+    profilePhoto?: string;
+    avatar?: string;
+  };
+  properties?: Property[];
+  performance?: Record<string, number>;
+  certifications?: string[];
+  workingHours?: Record<string, string>;
+  marketReports?: Array<{ title: string; date: string; url: string }>;
+}
 
-This is a guide for using artifacts tools: \`createDocument\` and \`updateDocument\`, which render content on a artifacts beside the conversation.
-
-**When to use \`createDocument\`:**
-- For substantial content (>10 lines) or code
-- For content users will likely save/reuse (emails, code, essays, etc.)
-- When explicitly requested to create a document
-- For when content contains a single code snippet
-
-**When NOT to use \`createDocument\`:**
-- For informational/explanatory content
-- For conversational responses
-- When asked to keep it in chat
-
-**Using \`updateDocument\`:**
-- Default to full document rewrites for major changes
-- Use targeted updates only for specific, isolated changes
-- Follow user instructions for which parts to modify
-
-**When NOT to use \`updateDocument\`:**
-- Immediately after creating a document
-
-Do not update document right after creating it. Wait for user feedback or request to update it.
-`;
-
-export const regularPrompt =
-  'You are a friendly assistant! Keep your responses concise and helpful.';
+interface RefDataMap {
+  [ref: string]: RefDataItem;
+}
 
 export interface RequestHints {
   latitude: Geo['latitude'];
@@ -42,80 +84,134 @@ export interface RequestHints {
   country: Geo['country'];
 }
 
-export const getRequestPromptFromHints = (requestHints: RequestHints) => `\
+// -----------------------------
+// Raw data
+// -----------------------------
+const defaultData = defaultDataRaw as DefaultData;
+const refData = refDataRaw as RefDataMap;
+
+// -----------------------------
+// Type for merged agent data
+// -----------------------------
+type AgentData = DefaultData & Partial<RefDataItem>;
+
+// -----------------------------
+// Deep merge helper
+// -----------------------------
+function deepMerge<T>(target: T, source: Partial<T>): T {
+  const result: any = { ...target };
+  for (const key in source) {
+    if (
+      source[key] &&
+      typeof source[key] === 'object' &&
+      !Array.isArray(source[key])
+    ) {
+      result[key] = deepMerge((target as any)[key] || {}, source[key]);
+    } else if (source[key] !== undefined) {
+      result[key] = source[key];
+    }
+  }
+  return result;
+}
+
+// -----------------------------
+// Get merged REF data
+// -----------------------------
+export const getDataByRef = (ref?: string): AgentData => {
+  if (ref && refData[ref]) {
+    const merged: AgentData = deepMerge(defaultData, refData[ref]);
+
+    if (!refData[ref].regularPrompt && merged.regularPrompt) {
+      merged.regularPrompt = merged.regularPrompt.replace(
+        'You are ,',
+        `You are ${refData[ref].name},`
+      );
+    }
+
+    return merged;
+  }
+
+  // Default fallback
+  return {
+    ...defaultData,
+    regularPrompt: defaultData.regularPrompt.replace('You are ,', 'You are Gluks,'),
+  };
+};
+
+// -----------------------------
+// Request hints
+// -----------------------------
+export const getRequestPromptFromHints = (requestHints: RequestHints, ref?: string) => {
+  const dynamicData = getDataByRef(ref);
+  return `
 About the origin of user's request:
 - lat: ${requestHints.latitude}
 - lon: ${requestHints.longitude}
 - city: ${requestHints.city}
 - country: ${requestHints.country}
+- Bot Name: ${dynamicData.name}
 `;
+};
 
+// -----------------------------
+// System prompt
+// -----------------------------
 export const systemPrompt = ({
   selectedChatModel,
   requestHints,
+  ref,
 }: {
   selectedChatModel: string;
   requestHints: RequestHints;
+  ref?: string;
 }) => {
-  const requestPrompt = getRequestPromptFromHints(requestHints);
+  const dynamicData = getDataByRef(ref);
+  const requestPrompt = getRequestPromptFromHints(requestHints, ref);
+
+  // Insert full agent data so LLM doesn’t invent anything
+  const agentDataSnippet = `
+⚠️ USE ONLY THE FOLLOWING DATA WHEN ANSWERING USER:
+Name: ${dynamicData.name}
+Title: ${dynamicData.profile?.title || 'N/A'}
+Bio: ${dynamicData.profile?.bio || 'N/A'}
+Experience: ${dynamicData.profile?.experience || 'N/A'}
+Languages: ${dynamicData.profile?.languages?.join(', ') || 'N/A'}
+Specialties: ${dynamicData.profile?.specialties?.join(', ') || 'N/A'}
+Email: ${dynamicData.contact?.email || 'N/A'}
+Phone: ${dynamicData.contact?.phone || 'N/A'}
+WhatsApp: ${dynamicData.contact?.whatsapp || 'N/A'}
+LinkedIn: ${dynamicData.contact?.linkedin || 'N/A'}
+Properties: ${
+    dynamicData.properties?.map(p => `${p.title} (${p.type})`).join(', ') || 'N/A'
+  }
+`;
 
   if (selectedChatModel === 'chat-model-reasoning') {
-    return `${regularPrompt}\n\n${requestPrompt}`;
+    return `${dynamicData.regularPrompt}\n\n${agentDataSnippet}\n\n${requestPrompt}`;
   } else {
-    return `${regularPrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
+    return `${dynamicData.regularPrompt}\n\n${agentDataSnippet}\n\n${requestPrompt}\n\n${dynamicData.artifactsPrompt}`;
   }
 };
 
-export const codePrompt = `
-You are a Python code generator that creates self-contained, executable code snippets. When writing code:
+// -----------------------------
+// Code / Sheet prompts
+// -----------------------------
+export const codePrompt = (ref?: string) => getDataByRef(ref).codePrompt;
+export const sheetPrompt = (ref?: string) => getDataByRef(ref).sheetPrompt;
 
-1. Each snippet should be complete and runnable on its own
-2. Prefer using print() statements to display outputs
-3. Include helpful comments explaining the code
-4. Keep snippets concise (generally under 15 lines)
-5. Avoid external dependencies - use Python standard library
-6. Handle potential errors gracefully
-7. Return meaningful output that demonstrates the code's functionality
-8. Don't use input() or other interactive functions
-9. Don't access files or network resources
-10. Don't use infinite loops
-
-Examples of good snippets:
-
-# Calculate factorial iteratively
-def factorial(n):
-    result = 1
-    for i in range(1, n + 1):
-        result *= i
-    return result
-
-print(f"Factorial of 5 is: {factorial(5)}")
-`;
-
-export const sheetPrompt = `
-You are a spreadsheet creation assistant. Create a spreadsheet in csv format based on the given prompt. The spreadsheet should contain meaningful column headers and data.
-`;
-
+// -----------------------------
+// Update document
+// -----------------------------
 export const updateDocumentPrompt = (
   currentContent: string | null,
   type: ArtifactKind,
-) =>
-  type === 'text'
-    ? `\
-Improve the following contents of the document based on the given prompt.
-
-${currentContent}
-`
+  ref?: string
+) => {
+  return type === 'text'
+    ? `Improve the following real estate document contents based on the given prompt. Only make improvements related to real estate matters.\n\n${currentContent}`
     : type === 'code'
-      ? `\
-Improve the following code snippet based on the given prompt.
-
-${currentContent}
-`
-      : type === 'sheet'
-        ? `\
-Improve the following spreadsheet based on the given prompt.
-
-${currentContent}
-`
-        : '';
+    ? `Improve the following real estate calculation code snippet based on the given prompt. Only make improvements for real estate-related calculations.\n\n${currentContent}`
+    : type === 'sheet'
+    ? `Improve the following real estate spreadsheet based on the given prompt. Only make improvements related to real estate data and calculations.\n\n${currentContent}`
+    : '';
+};

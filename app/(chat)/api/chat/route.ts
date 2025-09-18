@@ -39,6 +39,8 @@ import { ChatSDKError } from '@/lib/errors';
 import type { ChatMessage } from '@/lib/types';
 import type { ChatModel } from '@/lib/ai/models';
 import type { VisibilityType } from '@/components/visibility-selector';
+// ADD THIS IMPORT
+import { cookies } from 'next/headers';
 
 export const maxDuration = 60;
 
@@ -92,6 +94,10 @@ export async function POST(request: Request) {
     if (!session?.user) {
       return new ChatSDKError('unauthorized:chat').toResponse();
     }
+
+    // ADD THIS LINE - Get ref from cookies
+    const ref = (await cookies()).get('ref')?.value;
+    console.log('🔍 DEBUG: ref from cookies:', ref);
 
     const userType: UserType = session.user.type;
 
@@ -157,7 +163,8 @@ export async function POST(request: Request) {
       execute: ({ writer: dataStream }) => {
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
-          system: systemPrompt({ selectedChatModel, requestHints }),
+          // CHANGE THIS LINE - Add ref parameter
+          system: systemPrompt({ selectedChatModel, requestHints, ref }),
           messages: convertToModelMessages(uiMessages),
           stopWhen: stepCountIs(5),
           experimental_activeTools:

@@ -5,15 +5,20 @@ import { ThemeProvider } from '@/components/theme-provider';
 
 import './globals.css';
 import { SessionProvider } from 'next-auth/react';
+import { cookies } from 'next/headers'; // server-side access
+import React from 'react';
+
+// ---- NEW: Client Context for ref ----
+import { RefProvider } from './RefProvider';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://chat.vercel.ai'),
-  title: 'Next.js Chatbot Template',
-  description: 'Next.js chatbot template using the AI SDK.',
+  metadataBase: new URL('https://gluks.pt'),
+  title: 'Gluks',
+  description: 'Gluks Chatbot Assistant.',
 };
 
 export const viewport = {
-  maximumScale: 1, // Disable auto-zoom on mobile Safari
+  maximumScale: 1,
 };
 
 const geist = Geist({
@@ -48,20 +53,38 @@ const THEME_COLOR_SCRIPT = `\
   updateThemeColor();
 })();`;
 
+interface RootLayoutProps {
+  children: React.ReactNode;
+  searchParams?: { [key: string]: string | string[] | undefined };
+}
+
 export default async function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+  searchParams,
+}: RootLayoutProps) {
+  const cookieStore = cookies();
+
+  // ---- NEW: Get ref from query params or cookies ----
+  let ref: string | null = Array.isArray(searchParams?.ref)
+    ? searchParams.ref[0]
+    : searchParams?.ref ?? null;
+
+  if (ref) {
+    // Persist the ref in a cookie for next visits
+    (await
+      // Persist the ref in a cookie for next visits
+      cookieStore).set('ref', ref, { path: '/' });
+  } else {
+    // Read ref from cookie if no query param
+    ref = (await cookieStore).get('ref')?.value ?? null;
+  }
+
   return (
     <html
       lang="en"
-      // `next-themes` injects an extra classname to the body element to avoid
-      // visual flicker before hydration. Hence the `suppressHydrationWarning`
-      // prop is necessary to avoid the React hydration mismatch warning.
-      // https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
       suppressHydrationWarning
       className={`${geist.variable} ${geistMono.variable}`}
+      style={{ height: '100%' }} // full height
     >
       <head>
         <script
@@ -70,7 +93,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className="antialiased">
+      <body className="antialiased min-h-screen flex flex-col">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -78,7 +101,12 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <Toaster position="top-center" />
-          <SessionProvider>{children}</SessionProvider>
+          <SessionProvider>
+            {/* ---- Provide ref via React Context ---- */}
+            <RefProvider refValue={ref}>
+              {children}
+            </RefProvider>
+          </SessionProvider>
         </ThemeProvider>
       </body>
     </html>

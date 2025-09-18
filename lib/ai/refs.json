@@ -1,0 +1,165 @@
+{
+  "REF1223": {
+    "name": "Max",
+    "regularPrompt": "You are Max, a specialized real estate assistant for VIP clients.",
+    "profile": {
+      "title": "VIP Real Estate Specialist",
+      "experience": "8 years",
+      "languages": ["English", "Spanish", "French"],
+      "specialties": ["Luxury Properties", "Commercial Real Estate", "Investment Properties"],
+      "bio": "Max specializes in high-end properties and provides personalized service to VIP clients seeking premium real estate opportunities."
+    },
+    "contact": {
+      "phone": "+1-555-0123",
+      "email": "max@premiumrealty.com",
+      "whatsapp": "https://wa.me/15550123",
+      "linkedin": "https://linkedin.com/in/max-realestate",
+      "availability": "Mon-Sat 9AM-8PM EST"
+    },
+    "image": {
+      "profilePhoto": "/images/agents/max-profile.jpg",
+      "avatar": "/images/avatars/max-avatar.png"
+    },
+    "properties": [
+      {
+        "id": "PROP001",
+        "title": "Luxury Penthouse Downtown",
+        "type": "Penthouse",
+        "price": 2500000,
+        "currency": "USD",
+        "bedrooms": 3,
+        "bathrooms": 3.5,
+        "sqft": 2800,
+        "address": "123 Elite Tower, Downtown District",
+        "features": ["City Views", "Private Terrace", "Smart Home", "Concierge"],
+        "images": ["/properties/prop001/main.jpg", "/properties/prop001/gallery/"],
+        "status": "Available"
+      },
+      {
+        "id": "PROP002",
+        "title": "Waterfront Villa",
+        "type": "Villa",
+        "price": 4200000,
+        "currency": "USD",
+        "bedrooms": 5,
+        "bathrooms": 6,
+        "sqft": 4500,
+        "address": "456 Ocean Drive, Waterfront District",
+        "features": ["Private Beach", "Infinity Pool", "Wine Cellar", "Guest House"],
+        "images": ["/properties/prop002/main.jpg", "/properties/prop002/gallery/"],
+        "status": "Under Negotiation"
+      }
+    ],
+    "performance": {
+      "totalSales": 47,
+      "totalVolume": 125000000,
+      "avgDaysOnMarket": 28,
+      "clientSatisfactionScore": 4.9,
+      "lastMonthDeals": 3
+    },
+    "certifications": [
+      "Certified Luxury Home Marketing Specialist",
+      "Commercial Real Estate License",
+      "International Property Specialist"
+    ],
+    "workingHours": {
+      "timezone": "EST",
+      "monday": "9:00-20:00",
+      "tuesday": "9:00-20:00", 
+      "wednesday": "9:00-20:00",
+      "thursday": "9:00-20:00",
+      "friday": "9:00-20:00",
+      "saturday": "10:00-18:00",
+      "sunday": "Closed"
+    }
+  },
+  "REF456": {
+    "name": "Luna",
+    "regularPrompt": "You are Luna, expert in property valuations and market trends.",
+    "profile": {
+      "title": "Market Analysis & Valuation Expert",
+      "experience": "12 years",
+      "languages": ["English", "Portuguese", "Italian"],
+      "specialties": ["Property Valuation", "Market Analysis", "Investment Advisory", "Rental Properties"],
+      "bio": "Luna is a seasoned expert in property valuations with deep knowledge of market trends and investment opportunities across multiple markets."
+    },
+    "contact": {
+      "phone": "+1-555-0456",
+      "email": "luna@marketvaluations.com",
+      "whatsapp": "https://wa.me/15550456",
+      "linkedin": "https://linkedin.com/in/luna-valuations",
+      "availability": "Mon-Fri 8AM-6PM EST"
+    },
+    "image": {
+      "profilePhoto": "/images/agents/luna-profile.jpg",
+      "avatar": "/images/avatars/luna-avatar.png"
+    },
+    "properties": [
+      {
+        "id": "PROP003",
+        "title": "Investment Apartment Complex",
+        "type": "Multi-Family",
+        "price": 3800000,
+        "currency": "USD",
+        "units": 24,
+        "avgRent": 2200,
+        "sqft": 18000,
+        "address": "789 Investment Lane, Growth District",
+        "features": ["High ROI", "Low Vacancy", "Recent Renovation", "Prime Location"],
+        "images": ["/properties/prop003/main.jpg", "/properties/prop003/gallery/"],
+        "status": "Available",
+        "roi": 8.2,
+        "capRate": 6.8
+      },
+      {
+        "id": "PROP004",
+        "title": "Modern Family Home",
+        "type": "Single Family",
+        "price": 875000,
+        "currency": "USD",
+        "bedrooms": 4,
+        "bathrooms": 3,
+        "sqft": 2200,
+        "address": "321 Family Street, Suburban Hills",
+        "features": ["Great Schools", "Large Yard", "Updated Kitchen", "Two-Car Garage"],
+        "images": ["/properties/prop004/main.jpg", "/properties/prop004/gallery/"],
+        "status": "Price Reduced"
+      }
+    ],
+    "performance": {
+      "totalValuations": 340,
+      "accuracyRate": 96.5,
+      "avgMarketTime": 21,
+      "clientSatisfactionScore": 4.8,
+      "lastMonthReports": 18
+    },
+    "certifications": [
+      "Certified Real Estate Appraiser",
+      "Market Analysis Professional",
+      "Investment Property Specialist",
+      "Residential Property Analyst"
+    ],
+    "workingHours": {
+      "timezone": "EST",
+      "monday": "8:00-18:00",
+      "tuesday": "8:00-18:00",
+      "wednesday": "8:00-18:00", 
+      "thursday": "8:00-18:00",
+      "friday": "8:00-18:00",
+      "saturday": "Closed",
+      "sunday": "Closed"
+    },
+    "marketReports": [
+      {
+        "title": "Q4 2024 Market Trends",
+        "date": "2024-12-15",
+        "url": "/reports/q4-2024-trends.pdf"
+      },
+      {
+        "title": "Investment Opportunities 2025",
+        "date": "2024-11-20",
+        "url": "/reports/investment-2025.pdf"
+      }
+    ]
+  }
+}
