@@ -59,7 +59,6 @@ interface RootLayoutProps {
 export default async function RootLayout({
   children,
 }: RootLayoutProps) {
-  // ---- Read ref from cookies (set by your API route) ----
   let ref: string | null = null;
 
   try {
