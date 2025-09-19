@@ -2,12 +2,10 @@ import { Toaster } from 'sonner';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
-
 import './globals.css';
 import { SessionProvider } from 'next-auth/react';
 import { cookies } from 'next/headers'; // server-side access
 import React from 'react';
-
 // ---- NEW: Client Context for ref ----
 import { RefProvider } from './RefProvider';
 
@@ -35,6 +33,7 @@ const geistMono = Geist_Mono({
 
 const LIGHT_THEME_COLOR = 'hsl(0 0% 100%)';
 const DARK_THEME_COLOR = 'hsl(240deg 10% 3.92%)';
+
 const THEME_COLOR_SCRIPT = `\
 (function() {
   var html = document.documentElement;
@@ -62,22 +61,20 @@ export default async function RootLayout({
   children,
   searchParams,
 }: RootLayoutProps) {
-  const cookieStore = cookies();
-
-  // ---- NEW: Get ref from query params or cookies ----
+  // ---- Get ref from query params or cookies ----
   let ref: string | null = Array.isArray(searchParams?.ref)
     ? searchParams.ref[0]
     : searchParams?.ref ?? null;
 
-  if (ref) {
-    // Persist the ref in a cookie for next visits
-    (await
-      // Persist the ref in a cookie for next visits
-      cookieStore).set('ref', ref, { path: '/' });
-  } else {
-    // Read ref from cookie if no query param
-    ref = (await cookieStore).get('ref')?.value ?? null;
+  // If no ref in query params, try to read from cookies
+  if (!ref) {
+    const cookieStore = await cookies();
+    ref = cookieStore.get('ref')?.value ?? null;
   }
+
+  // Note: Setting cookies in layout is not recommended.
+  // You should handle cookie setting in a server action, API route, or middleware.
+  // For now, we'll just read the existing ref from cookies if no query param exists.
 
   return (
     <html
