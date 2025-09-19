@@ -59,7 +59,6 @@ interface RootLayoutProps {
 export default async function RootLayout({
   children,
 }: RootLayoutProps) {
-<<<<<<< HEAD
   // ---- Read ref from cookies (set by your API route) ----
   let ref: string | null = null;
 
@@ -71,22 +70,7 @@ export default async function RootLayout({
   } catch (error) {
     console.warn('Failed to read cookies:', error);
     ref = null;
-=======
-  // ---- Get ref from query params or cookies ----
-  let ref: string | null = Array.isArray(searchParams?.ref)
-    ? searchParams.ref[0]
-    : searchParams?.ref ?? null;
-
-  // If no ref in query params, try to read from cookies
-  if (!ref) {
-    const cookieStore = await cookies();
-    ref = cookieStore.get('ref')?.value ?? null;
->>>>>>> d1d0e319c66f654c6f817892e45e26ef0c53e1cf
   }
-
-  // Note: Setting cookies in layout is not recommended.
-  // You should handle cookie setting in a server action, API route, or middleware.
-  // For now, we'll just read the existing ref from cookies if no query param exists.
 
   return (
     <html
