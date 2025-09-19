@@ -2,12 +2,10 @@ import { Toaster } from 'sonner';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
-
 import './globals.css';
 import { SessionProvider } from 'next-auth/react';
-import { cookies } from 'next/headers'; // server-side access
+import { cookies } from 'next/headers';
 import React from 'react';
-
 // ---- NEW: Client Context for ref ----
 import { RefProvider } from './RefProvider';
 
@@ -35,6 +33,7 @@ const geistMono = Geist_Mono({
 
 const LIGHT_THEME_COLOR = 'hsl(0 0% 100%)';
 const DARK_THEME_COLOR = 'hsl(240deg 10% 3.92%)';
+
 const THEME_COLOR_SCRIPT = `\
 (function() {
   var html = document.documentElement;
@@ -55,28 +54,22 @@ const THEME_COLOR_SCRIPT = `\
 
 interface RootLayoutProps {
   children: React.ReactNode;
-  searchParams?: { [key: string]: string | string[] | undefined };
 }
 
 export default async function RootLayout({
   children,
-  searchParams,
 }: RootLayoutProps) {
-  const cookieStore = cookies();
+  // ---- Read ref from cookies (set by your API route) ----
+  let ref: string | null = null;
 
-  // ---- NEW: Get ref from query params or cookies ----
-  let ref: string | null = Array.isArray(searchParams?.ref)
-    ? searchParams.ref[0]
-    : searchParams?.ref ?? null;
-
-  if (ref) {
-    // Persist the ref in a cookie for next visits
-    (await
-      // Persist the ref in a cookie for next visits
-      cookieStore).set('ref', ref, { path: '/' });
-  } else {
-    // Read ref from cookie if no query param
-    ref = (await cookieStore).get('ref')?.value ?? null;
+  try {
+    // Handle both sync and async versions of cookies()
+    const cookieStore = cookies();
+    const resolvedCookies = cookieStore instanceof Promise ? await cookieStore : cookieStore;
+    ref = resolvedCookies.get('ref')?.value ?? null;
+  } catch (error) {
+    console.warn('Failed to read cookies:', error);
+    ref = null;
   }
 
   return (
@@ -84,7 +77,7 @@ export default async function RootLayout({
       lang="en"
       suppressHydrationWarning
       className={`${geist.variable} ${geistMono.variable}`}
-      style={{ height: '100%' }} // full height
+      style={{ height: '100%' }}
     >
       <head>
         <script
